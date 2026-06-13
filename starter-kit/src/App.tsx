@@ -76,7 +76,7 @@ function App() {
           <ul className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <li key={i} className="text-sm text-slate-600 border-b border-slate-50 pb-2 last:border-0">
-                地縁情報を読み込んでいます
+                遅延情報を読み込んでいます
               </li>
             ))}
           </ul>
