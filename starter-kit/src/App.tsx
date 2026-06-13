@@ -1,5 +1,5 @@
-import React from 'react';
-import { Sun, Cloud, Newspaper, CheckCircle, Clock } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Sun, Cloud, Newspaper, CheckCircle, Clock , Train} from 'lucide-react';
 
 function App() {
   const [time, setTime] = React.useState(new Date());
@@ -8,6 +8,7 @@ function App() {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -63,6 +64,43 @@ function App() {
             </label>
           </div>
         </section>
+
+        <style>{`
+        @keyframes trainRun {
+          0% { left: -20%; }
+          100% { left: 100%; }
+        }
+      `}</style>
+        
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              <Train className="text-emerald-700" /> 運行状況
+            </h2>
+          </div>
+
+          <div className="flex flex-col gap-4">
+          <div>
+              <p className="text-sm font-bold text-[#00a7db] mb-1">東西線</p>
+              <div className="w-full h-12 bg-slate-100 rounded-lg relative overflow-hidden border border-slate-200">
+                <img 
+                  src="/14blueline.png" 
+                  alt="東西線"
+                  className="h-10 absolute top-1 drop-shadow-md"
+                  style={{
+                    animationName: 'trainRun',
+                    animationTimingFunction: 'linear',
+                    animationIterationCount: 'infinite',
+                    animationDuration: '3s' 
+                  }}
+                />
+              </div>
+            </div>
+            
+          </div>
+        </section>
+
+
       </main>
 
       <footer className="mt-12 text-center text-slate-400 text-xs">
