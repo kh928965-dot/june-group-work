@@ -63,6 +63,44 @@ function App() {
             </label>
           </div>
         </section>
+
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <img src ="/touzai-line.png" alt="東西線" className="h-6 w-auto mr-2"></img>
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              
+              <Newspaper className="text-blue-500" /> Train-delay
+            </h2>
+
+          </div>
+          <ul className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <li key={i} className="text-sm text-slate-600 border-b border-slate-50 pb-2 last:border-0">
+                地縁情報を読み込んでいます
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <img src ="/fukutoshin-line.png" alt="副都心線" className="h-6 w-auto mr-2"></img>
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              
+              <Newspaper className="text-blue-500" /> Train-delay
+            </h2>
+
+          </div>
+          <ul className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <li key={i} className="text-sm text-slate-600 border-b border-slate-50 pb-2 last:border-0">
+                地縁情報を読み込んでいます
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        
       </main>
 
       <footer className="mt-12 text-center text-slate-400 text-xs">
