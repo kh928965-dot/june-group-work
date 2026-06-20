@@ -8,18 +8,35 @@ function App() {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+  
+  const weather = "Sunny";
+  const celcius = "20";
+
+  const Greeting = function (): string {
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    if (currentHour >= 5 && currentHour < 12) {
+        return "Good Morning!";
+    } else if (currentHour >= 12 && currentHour < 18) {
+        return "Hello!";
+    } else {
+        return "Good night!";
+    }
+  };
+
 
   return (
     <div className="min-h-screen p-4 md:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">Good Morning!</h1>
+        <h1 className="text-3xl font-bold text-slate-800">{Greeting()}</h1>
         <p className="text-slate-500 flex items-center gap-2">
           <Clock size={18} />
           {time.toLocaleTimeString()}
         </p>
       </header>
 
-      <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <main className="grid gap-6">
         {/* Weather Widget Placeholder */}
         <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex justify-between items-center mb-4">
@@ -28,8 +45,8 @@ function App() {
             </h2>
           </div>
           <div className="text-center py-4">
-            <div className="text-4xl font-bold mb-1">24°C</div>
-            <p className="text-slate-500">Sunny Day</p>
+            <div className="text-4xl font-bold mb-1">{celcius}°C</div>
+            <p className="text-slate-500">{weather} Day</p>
           </div>
         </section>
 
