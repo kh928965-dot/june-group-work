@@ -24,9 +24,14 @@ function App() {
 
   // トリビアAPIから取得
   React.useEffect(() => {
-    fetch('https://catfact.ninja/fact')
+   fetch('https://catfact.ninja/fact')
   .then((res) => res.json())
-  .then((data) => setTrivia(data.fact))
+  .then((data) => {
+    const text = data.fact;
+    return fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ja`);
+  })
+  .then((res) => res.json())
+  .then((data) => setTrivia(data.responseData.translatedText))
   .catch(() => setTrivia('トリビアの取得に失敗しました'));
   }, []);
 
