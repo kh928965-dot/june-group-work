@@ -1,39 +1,69 @@
 import React from 'react';
 import { Sun, Cloud, CloudRain, Snowflake, Clock, Train } from 'lucide-react';
 
-type Weather = 'sunny' | 'cloudy' | 'rainy' | 'snowy';
+const API_KEY = '0d660bfdade34e35d97f2ef141ee6a7b';
 
-const weather: Weather = 'sunny';
+type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'unknown';
+
+function getWeatherType(main: string): WeatherType {
+  if (main === 'Clear') return 'sunny';
+  if (main === 'Clouds') return 'cloudy';
+  if (main === 'Rain' || main === 'Drizzle' || main === 'Thunderstorm') return 'rainy';
+  if (main === 'Snow') return 'snowy';
+  return 'unknown';
+}
 
 const weatherConfig = {
-  sunny:  { bg: 'bg-amber-100', border: 'border-amber-200', icon: <Sun size={64} className="text-amber-500" />,      label: '晴れ', temp: '28°C' },
-  cloudy: { bg: 'bg-slate-200', border: 'border-slate-300', icon: <Cloud size={64} className="text-slate-500" />,    label: '曇り', temp: '22°C' },
-  rainy:  { bg: 'bg-blue-100',  border: 'border-blue-200',  icon: <CloudRain size={64} className="text-blue-500" />, label: '雨',   temp: '18°C' },
-  snowy:  { bg: 'bg-sky-100',   border: 'border-sky-200',   icon: <Snowflake size={64} className="text-sky-400" />,  label: '雪',   temp: '2°C'  },
+  sunny:   { bg: 'bg-amber-100', border: 'border-amber-200', icon: <Sun size={64} className="text-amber-500" /> },
+  cloudy:  { bg: 'bg-slate-200', border: 'border-slate-300', icon: <Cloud size={64} className="text-slate-500" /> },
+  rainy:   { bg: 'bg-blue-100',  border: 'border-blue-200',  icon: <CloudRain size={64} className="text-blue-500" /> },
+  snowy:   { bg: 'bg-sky-100',   border: 'border-sky-200',   icon: <Snowflake size={64} className="text-sky-400" /> },
+  unknown: { bg: 'bg-white',     border: 'border-slate-100', icon: <Cloud size={64} className="text-slate-400" /> },
 };
 
 function App() {
   const [time, setTime] = React.useState(new Date());
   const [trivia, setTrivia] = React.useState('トリビアを読み込んでいます...');
-  const w = weatherConfig[weather];
+  const [weatherData, setWeatherData] = React.useState<{
+    temp: number;
+    description: string;
+    type: WeatherType;
+  } | null>(null);
 
   React.useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // トリビアAPIから取得
+  // トリビアAPI
   React.useEffect(() => {
-   fetch('https://catfact.ninja/fact')
-  .then((res) => res.json())
-  .then((data) => {
-    const text = data.fact;
-    return fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ja`);
-  })
-  .then((res) => res.json())
-  .then((data) => setTrivia(data.responseData.translatedText))
-  .catch(() => setTrivia('トリビアの取得に失敗しました'));
+    fetch('https://catfact.ninja/fact')
+      .then((res) => res.json())
+      .then((data) => {
+        const text = data.fact;
+        return fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ja`);
+      })
+      .then((res) => res.json())
+      .then((data) => setTrivia(data.responseData.translatedText))
+      .catch(() => setTrivia('トリビアの取得に失敗しました'));
   }, []);
+
+  // 天気API
+  React.useEffect(() => {
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid=${API_KEY}&units=metric&lang=ja`)
+      .then((res) => res.json())
+      .then((data) => {
+        setWeatherData({
+          temp: Math.round(data.main.temp),
+          description: data.weather[0].description,
+          type: getWeatherType(data.weather[0].main),
+        });
+      })
+      .catch(() => console.error('天気の取得に失敗しました'));
+  }, []);
+
+  const weatherType = weatherData?.type ?? 'unknown';
+  const w = weatherConfig[weatherType];
 
   return (
     <div className={`min-h-screen transition-colors duration-700 ${w.bg}`}>
@@ -49,8 +79,12 @@ function App() {
         {/* 天気（大きく） */}
         <section className={`${w.bg} ${w.border} border rounded-3xl p-8 flex flex-col items-center justify-center gap-4`}>
           {w.icon}
-          <div className="text-6xl font-bold text-slate-800">{w.temp}</div>
-          <div className="text-2xl text-slate-600">{w.label}</div>
+          <div className="text-6xl font-bold text-slate-800">
+            {weatherData ? `${weatherData.temp}°C` : '読込中...'}
+          </div>
+          <div className="text-2xl text-slate-600">
+            {weatherData ? weatherData.description : ''}
+          </div>
         </section>
 
         {/* 今日のトリビア */}
