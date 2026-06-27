@@ -1,150 +1,134 @@
-import React from 'react';
-import { Sun, Cloud, CloudRain, Snowflake, Clock, Train } from 'lucide-react';
-
-const API_KEY = '0d660bfdade34e35d97f2ef141ee6a7b';
-
-type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'unknown';
-
-function getWeatherType(main: string): WeatherType {
-  if (main === 'Clear') return 'sunny';
-  if (main === 'Clouds') return 'cloudy';
-  if (main === 'Rain' || main === 'Drizzle' || main === 'Thunderstorm') return 'rainy';
-  if (main === 'Snow') return 'snowy';
-  return 'unknown';
-}
-
-const weatherConfig = {
-  sunny:   { bg: 'bg-amber-100', border: 'border-amber-200', icon: <Sun size={64} className="text-amber-500" /> },
-  cloudy:  { bg: 'bg-slate-200', border: 'border-slate-300', icon: <Cloud size={64} className="text-slate-500" /> },
-  rainy:   { bg: 'bg-blue-100',  border: 'border-blue-200',  icon: <CloudRain size={64} className="text-blue-500" /> },
-  snowy:   { bg: 'bg-sky-100',   border: 'border-sky-200',   icon: <Snowflake size={64} className="text-sky-400" /> },
-  unknown: { bg: 'bg-white',     border: 'border-slate-100', icon: <Cloud size={64} className="text-slate-400" /> },
-};
-
-const bgmList = [
-  'u1inSXny700',
-];
-
-const randomBgm = bgmList[Math.floor(Math.random() * bgmList.length)];
+import React, { useState, useEffect } from 'react';
+import { Sun, Newspaper, CheckCircle, Clock } from 'lucide-react';
 
 function App() {
-  const [time, setTime] = React.useState(new Date());
-  const [trivia, setTrivia] = React.useState('トリビアを読み込んでいます...');
-  const [weatherData, setWeatherData] = React.useState<{
-    temp: number;
-    description: string;
-    type: WeatherType;
-  } | null>(null);
-  const [usdJpy, setUsdJpy] = React.useState<number | null>(null);
+  const [time, setTime] = useState(new Date());
 
-  React.useEffect(() => {
+  // ここは仮の遅延情報です。本来はAPIから遅延情報を取得します。コネガワ
+  const [touzaiDelay, setTouzaiDelay] = useState(0); // 遅延なし
+  const [fukutoshinDelay, setFukutoshinDelay] = useState(15); // 15分遅延
+
+  useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  React.useEffect(() => {
-    fetch('https://catfact.ninja/fact')
-      .then((res) => res.json())
-      .then((data) => {
-        const text = data.fact;
-        return fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ja`);
-      })
-      .then((res) => res.json())
-      .then((data) => setTrivia(data.responseData.translatedText))
-      .catch(() => setTrivia('トリビアの取得に失敗しました'));
-  }, []);
-
-  React.useEffect(() => {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid=${API_KEY}&units=metric&lang=ja`)
-      .then((res) => res.json())
-      .then((data) => {
-        setWeatherData({
-          temp: Math.round(data.main.temp),
-          description: data.weather[0].description,
-          type: getWeatherType(data.weather[0].main),
-        });
-      })
-      .catch(() => console.error('天気の取得に失敗しました'));
-  }, []);
-
-  React.useEffect(() => {
-    fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=JPY')
-      .then((res) => res.json())
-      .then((data) => setUsdJpy(data.rates.JPY))
-      .catch(() => console.error('為替の取得に失敗しました'));
-  }, []);
-
-  const weatherType = weatherData?.type ?? 'unknown';
-  const w = weatherConfig[weatherType];
+  const calculateSpeed = (delay: number) => {
+    return 3 + delay * 0.5;
+  };
 
   return (
-    <div className={`min-h-screen transition-colors duration-700 ${w.bg}`}>
+    <div className="min-h-screen p-4 md:p-8">
+      <style>
+        {`
+          @keyframes moveTrain {
+            0% { left: -50px; }
+            100% { left: 100%; }
+          }
+        `}
+      </style>
 
-      <header className="p-6 flex items-center gap-2 text-slate-600">
-        <Clock size={18} />
-        <span className="text-lg font-mono">{time.toLocaleTimeString()}</span>
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-800">Good Morning!</h1>
+        <p className="text-slate-500 flex items-center gap-2">
+          <Clock size={18} />
+          {time.toLocaleTimeString()}
+        </p>
       </header>
 
-      <main className="flex flex-col gap-4 px-4 pb-8">
-
-        <section className={`${w.bg} ${w.border} border rounded-3xl p-8 flex flex-col items-center justify-center gap-4`}>
-          {w.icon}
-          <div className="text-6xl font-bold text-slate-800">
-            {weatherData ? `${weatherData.temp}°C` : '読込中...'}
+      <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Weather Widget */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              <Sun className="text-amber-500" /> Weather
+            </h2>
           </div>
-          <div className="text-2xl text-slate-600">
-            {weatherData ? weatherData.description : ''}
-          </div>
-        </section>
-
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-          <h2 className="font-bold text-lg text-slate-700 mb-2">💡 今日のトリビア</h2>
-          <p className="text-slate-600">{trivia}</p>
-        </section>
-
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-          <h2 className="font-bold text-lg text-slate-700 mb-4">💱 為替レート</h2>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-600">USD → JPY</span>
-            <span className="text-2xl font-bold text-slate-800">{usdJpy ? `¥${usdJpy}` : '読込中...'}</span>
+          <div className="text-center py-4">
+            <div className="text-4xl font-bold mb-1">24°C</div>
+            <p className="text-slate-500">Sunny Day</p>
           </div>
         </section>
 
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center gap-3 mb-4">
-            <img src="/fukutoshin-line.png" alt="副都心線" className="h-6 w-auto" />
-            <h2 className="font-bold text-lg text-slate-700">副都心線</h2>
+        {/* News Widget */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              <Newspaper className="text-blue-500" /> Top Stories
+            </h2>
           </div>
-          <div className="flex items-center gap-2 bg-green-50 rounded-xl p-3">
-            <span className="text-green-600 font-bold text-sm">✅ 平常運転</span>
+          <ul className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <li key={i} className="text-sm text-slate-600 border-b border-slate-50 pb-2 last:border-0">
+                Loading some interesting news...
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Tasks Widget */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              <CheckCircle className="text-emerald-500" /> Today's Focus
+            </h2>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-sm text-slate-600">
+              <input type="checkbox" className="rounded border-slate-300" />
+              <span>Drink 1 glass of water</span>
+            </label>
           </div>
         </section>
 
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center gap-3 mb-4">
-            <img src="/touzai-line.png" alt="東西線" className="h-6 w-auto" />
-            <h2 className="font-bold text-lg text-slate-700">東西線</h2>
+        {/* 東西線　Widget */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              遅延情報 (東西線)
+            </h2>
           </div>
-          <div className="flex items-center gap-2 bg-green-50 rounded-xl p-3">
-            <span className="text-green-600 font-bold text-sm">✅ 平常運転</span>
-          </div>
-        </section>
-
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-          <h2 className="font-bold text-lg text-slate-700 mb-4">🎵 朝のBGM</h2>
-          <div className="rounded-2xl overflow-hidden">
-            <iframe
-              width="100%"
-              height="200"
-              src={`https://www.youtube.com/embed/${randomBgm}?autoplay=0`}
-              title="朝のBGM"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+          <p className="text-sm text-slate-600 mb-4 font-bold">
+            {touzaiDelay === 0 ? "🟢 平常運転" : `🔴 現在 ${touzaiDelay} 分遅延しています`}
+          </p>
+          <div className="relative w-full h-12 bg-slate-50 rounded overflow-hidden border border-slate-200 flex items-center">
+            <img 
+              src="/touzai-line.png" 
+              alt="東西線" 
+              className="absolute h-6 w-auto"
+              style={{
+                animation: `moveTrain ${calculateSpeed(touzaiDelay)}s linear infinite`
+              }}
             />
           </div>
         </section>
 
+        {/* 副都心線 Widget */}
+        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-semibold text-lg flex items-center gap-2">
+              遅延情報 (副都心線)
+            </h2>
+          </div>
+          <p className="text-sm text-slate-600 mb-4 font-bold">
+            {fukutoshinDelay === 0 ? "🟢 平常運転" : `🔴 現在 ${fukutoshinDelay} 分遅延しています`}
+          </p>
+          <div className="relative w-full h-12 bg-slate-50 rounded overflow-hidden border border-slate-200 flex items-center">
+            <img 
+              src="/fukutoshin-line.png" 
+              alt="副都心線" 
+              className="absolute h-6 w-auto"
+              style={{
+                animation: `moveTrain ${calculateSpeed(fukutoshinDelay)}s linear infinite`
+              }}
+            />
+          </div>
+        </section>
       </main>
+
+      <footer className="mt-12 text-center text-slate-400 text-xs">
+        &copy; 2026 Morning Dashboard Workshop - Built with React
+      </footer>
     </div>
   );
 }
