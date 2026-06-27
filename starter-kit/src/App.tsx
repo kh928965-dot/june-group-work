@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Cloud, CloudRain, Snowflake, Clock, Newspaper, CheckCircle } from 'lucide-react';
+import { Sun, Cloud, CloudRain, Snowflake, Newspaper } from 'lucide-react';
 
-const API_KEY = '0d660bfdade34e35d97f2ef141ee6a7b';
+const WEATHER_API_KEY = '0d660bfdade34e35d97f2ef141ee6a7b';
 
 type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'unknown';
 
@@ -14,21 +14,26 @@ function getWeatherType(main: string): WeatherType {
 }
 
 const weatherConfig = {
-  sunny:   { bg: 'bg-amber-100', border: 'border-amber-200', icon: <Sun size={64} className="text-amber-500" /> },
-  cloudy:  { bg: 'bg-slate-200', border: 'border-slate-300', icon: <Cloud size={64} className="text-slate-500" /> },
-  rainy:   { bg: 'bg-blue-100',  border: 'border-blue-200',  icon: <CloudRain size={64} className="text-blue-500" /> },
-  snowy:   { bg: 'bg-sky-100',   border: 'border-sky-200',   icon: <Snowflake size={64} className="text-sky-400" /> },
-  unknown: { bg: 'bg-white',     border: 'border-slate-100', icon: <Cloud size={64} className="text-slate-400" /> },
+  sunny:   { icon: <Sun size={56} className="text-amber-400" /> },
+  cloudy:  { icon: <Cloud size={56} className="text-slate-300" /> },
+  rainy:   { icon: <CloudRain size={56} className="text-blue-400" /> },
+  snowy:   { icon: <Snowflake size={56} className="text-sky-300" /> },
+  unknown: { icon: <Cloud size={56} className="text-slate-400" /> },
 };
 
 const bgmList = ['u1inSXny700'];
 const randomBgm = bgmList[Math.floor(Math.random() * bgmList.length)];
-
 const calculateSpeed = (delay: number) => 3 + delay * 0.5;
+
+type NewsArticle = {
+  title: string;
+  url: string;
+  source: string;
+};
 
 function App() {
   const [time, setTime] = useState(new Date());
-  const [trivia, setTrivia] = useState('トリビアを読み込んでいます...');
+  const [trivia, setTrivia] = useState('読み込み中...');
   const [weatherData, setWeatherData] = useState<{
     temp: number;
     description: string;
@@ -37,6 +42,8 @@ function App() {
   const [usdJpy, setUsdJpy] = useState<number | null>(null);
   const [touzaiDelay] = useState(0);
   const [fukutoshinDelay] = useState(15);
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [newsError, setNewsError] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -53,12 +60,12 @@ function App() {
       })
       .then((res) => res.json())
       .then((data) => setTrivia(data.responseData.translatedText))
-      .catch(() => setTrivia('トリビアの取得に失敗しました'));
+      .catch(() => setTrivia('取得に失敗しました'));
   }, []);
 
   // 天気API
   useEffect(() => {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid=${API_KEY}&units=metric&lang=ja`)
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid=${WEATHER_API_KEY}&units=metric&lang=ja`)
       .then((res) => res.json())
       .then((data) => {
         setWeatherData({
@@ -78,97 +85,142 @@ function App() {
       .catch(() => console.error('為替の取得に失敗しました'));
   }, []);
 
+  // NHKニュースRSS
+  useEffect(() => {
+    fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www3.nhk.or.jp/rss/news/cat0.xml')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === 'ok') {
+          setNews(data.items.slice(0, 6).map((item: any) => ({
+            title: item.title,
+            url: item.link,
+            source: 'NHKニュース',
+          })));
+        } else {
+          setNewsError('ニュースの取得に失敗しました');
+        }
+      })
+      .catch(() => setNewsError('ニュースの取得に失敗しました'));
+  }, []);
+
   const weatherType = weatherData?.type ?? 'unknown';
   const w = weatherConfig[weatherType];
 
   return (
-    <div className={`min-h-screen transition-colors duration-700 ${w.bg}`}>
-      <style>
-        {`
-          @keyframes moveTrain {
-            0% { left: -50px; }
-            100% { left: 100%; }
-          }
-        `}
-      </style>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-4 md:p-8">
+      <style>{`
+        @keyframes moveTrain {
+          0% { left: -50px; }
+          100% { left: 100%; }
+        }
+      `}</style>
 
-      {/* 時計ヘッダー */}
-      <header className="p-6 flex items-center gap-2 text-slate-600">
-        <Clock size={18} />
-        <span className="text-lg font-mono">{time.toLocaleTimeString()}</span>
-      </header>
+      <div className="max-w-5xl mx-auto flex flex-col gap-4">
 
-      <main className="flex flex-col gap-4 px-4 pb-8">
-
-        {/* 天気（大きく） */}
-        <section className={`${w.bg} ${w.border} border rounded-3xl p-8 flex flex-col items-center justify-center gap-4`}>
-          {w.icon}
-          <div className="text-6xl font-bold text-slate-800">
-            {weatherData ? `${weatherData.temp}°C` : '読込中...'}
+        {/* 時刻＋天気（主役） */}
+        <section className="bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 rounded-3xl p-8 flex items-center justify-between">
+          <div>
+            <p className="text-indigo-300/70 text-sm mb-1">{time.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'long' })}</p>
+            <p className="text-6xl font-bold text-white font-mono tracking-tight">
+              {time.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            <p className="text-indigo-300/50 text-sm mt-1">{time.toLocaleTimeString('ja-JP', { second: '2-digit' })} 秒</p>
           </div>
-          <div className="text-2xl text-slate-600">
-            {weatherData ? weatherData.description : ''}
+          <div className="flex flex-col items-center gap-2">
+            {w.icon}
+            <p className="text-4xl font-bold text-white">{weatherData ? `${weatherData.temp}°` : '--'}</p>
+            <p className="text-indigo-300/70 text-sm">{weatherData?.description ?? ''}</p>
           </div>
         </section>
 
-        {/* 今日のトリビア */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-          <h2 className="font-bold text-lg text-slate-700 mb-2">💡 今日のトリビア</h2>
-          <p className="text-slate-600">{trivia}</p>
+        {/* NHKニュース */}
+        <section className="bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 rounded-3xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Newspaper size={18} className="text-blue-400" />
+            <h2 className="text-white font-bold">NHK 最新ニュース</h2>
+          </div>
+          {newsError ? (
+            <p className="text-red-400 text-sm">{newsError}</p>
+          ) : news.length === 0 ? (
+            <p className="text-slate-400 text-sm">読み込み中...</p>
+          ) : (
+            <ul className="space-y-3">
+              {news.map((article, i) => (
+                <li key={i} className="border-b border-slate-700/50 pb-3 last:border-0">
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-200 text-sm hover:text-indigo-300 transition-colors leading-relaxed block"
+                  >
+                    {article.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
-        {/* 為替レート */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-          <h2 className="font-bold text-lg text-slate-700 mb-4">💱 為替レート</h2>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-600">USD → JPY</span>
-            <span className="text-2xl font-bold text-slate-800">{usdJpy ? `¥${usdJpy}` : '読込中...'}</span>
-          </div>
-        </section>
+        {/* 為替＋トリビア */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <section className="bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 rounded-3xl p-6 flex flex-col justify-center">
+            <h2 className="text-indigo-300/70 text-sm mb-2">💱 為替レート</h2>
+            <div className="flex items-baseline justify-between">
+              <span className="text-slate-400 text-sm">USD → JPY</span>
+              <span className="text-3xl font-bold text-white">{usdJpy ? `¥${usdJpy}` : '--'}</span>
+            </div>
+          </section>
 
-        {/* 東西線 */}
-        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold text-lg">遅延情報 (東西線)</h2>
-          </div>
-          <p className="text-sm text-slate-600 mb-4 font-bold">
-            {touzaiDelay === 0 ? '🟢 平常運転' : `🔴 現在 ${touzaiDelay} 分遅延しています`}
-          </p>
-          <div className="relative w-full h-12 bg-slate-50 rounded overflow-hidden border border-slate-200 flex items-center">
-            <img
-              src="/touzai-line.png"
-              alt="東西線"
-              className="absolute h-6 w-auto"
-              style={{ animation: `moveTrain ${calculateSpeed(touzaiDelay)}s linear infinite` }}
-            />
-          </div>
-        </section>
+          <section className="bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 rounded-3xl p-6 flex flex-col justify-center">
+            <h2 className="text-indigo-300/70 text-sm mb-2">💡 今日のトリビア</h2>
+            <p className="text-slate-200 text-sm leading-relaxed line-clamp-3">{trivia}</p>
+          </section>
+        </div>
 
-        {/* 副都心線 */}
-        <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold text-lg">遅延情報 (副都心線)</h2>
-          </div>
-          <p className="text-sm text-slate-600 mb-4 font-bold">
-            {fukutoshinDelay === 0 ? '🟢 平常運転' : `🔴 現在 ${fukutoshinDelay} 分遅延しています`}
-          </p>
-          <div className="relative w-full h-12 bg-slate-50 rounded overflow-hidden border border-slate-200 flex items-center">
-            <img
-              src="/fukutoshin-line.png"
-              alt="副都心線"
-              className="absolute h-6 w-auto"
-              style={{ animation: `moveTrain ${calculateSpeed(fukutoshinDelay)}s linear infinite` }}
-            />
-          </div>
-        </section>
+        {/* 電車遅延（アニメーション） */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <section className="bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 rounded-3xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-white font-bold text-sm">🚃 東西線</h2>
+              <span className="text-xs font-bold text-emerald-400">
+                {touzaiDelay === 0 ? '平常運転' : `${touzaiDelay}分遅延`}
+              </span>
+            </div>
+            <div className="relative w-full h-10 bg-slate-900/50 rounded-lg overflow-hidden flex items-center">
+              <img
+                src="/touzai-line.png"
+                alt="東西線"
+                className="absolute h-6 w-auto"
+                style={{ animation: `moveTrain ${calculateSpeed(touzaiDelay)}s linear infinite` }}
+              />
+            </div>
+          </section>
 
-        {/* YouTube BGM */}
-        <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-          <h2 className="font-bold text-lg text-slate-700 mb-4">🎵 朝のBGM</h2>
+          <section className="bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 rounded-3xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-white font-bold text-sm">🚃 副都心線</h2>
+              <span className="text-xs font-bold text-red-400">
+                {fukutoshinDelay === 0 ? '平常運転' : `${fukutoshinDelay}分遅延`}
+              </span>
+            </div>
+            <div className="relative w-full h-10 bg-slate-900/50 rounded-lg overflow-hidden flex items-center">
+              <img
+                src="/fukutoshin-line.png"
+                alt="副都心線"
+                className="absolute h-6 w-auto"
+                style={{ animation: `moveTrain ${calculateSpeed(fukutoshinDelay)}s linear infinite` }}
+              />
+            </div>
+          </section>
+        </div>
+
+        {/* BGM */}
+        <section className="bg-slate-800/40 backdrop-blur-sm border border-indigo-500/20 rounded-3xl p-5">
+          <h2 className="text-indigo-300/70 text-sm mb-3">🎵 朝のBGM</h2>
           <div className="rounded-2xl overflow-hidden">
             <iframe
               width="100%"
-              height="200"
+              height="180"
               src={`https://www.youtube.com/embed/${randomBgm}?autoplay=0`}
               title="朝のBGM"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -177,11 +229,8 @@ function App() {
           </div>
         </section>
 
-      </main>
 
-      <footer className="mt-12 text-center text-slate-400 text-xs">
-        &copy; 2026 Morning Dashboard Workshop - Built with React
-      </footer>
+      </div>
     </div>
   );
 }
