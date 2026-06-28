@@ -109,9 +109,11 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-4 md:p-8">
       <style>{`
-        @keyframes moveTrain {
-          0% { left: -50px; }
-          100% { left: 100%; }
+        @keyframes moveTrainWithStop {
+          0% { left: -10%; transform: translateX(-50%); }
+          35% { left: 50%; transform: translateX(-50%); }
+          65% { left: 50%; transform: translateX(-50%); }
+          100% { left: 110%; transform: translateX(-50%); }
         }
       `}</style>
 
@@ -186,12 +188,18 @@ function App() {
                 {touzaiDelay === 0 ? '平常運転' : `${touzaiDelay}分遅延`}
               </span>
             </div>
-            <div className="relative w-full h-10 bg-slate-900/50 rounded-lg overflow-hidden flex items-center">
+            {/* 高さを広げて駅の表示を追加 */}
+            <div className="relative w-full h-14 bg-slate-900/50 rounded-lg overflow-hidden flex items-center justify-center">
+              {/* 早稲田駅マーカー */}
+              <div className="absolute flex flex-col items-center justify-center z-0 translate-y-3">
+                <div className="w-16 h-1 bg-slate-700 rounded mb-1"></div>
+                <span className="text-[10px] text-slate-400 font-bold tracking-widest">早稲田駅</span>
+              </div>
               <img
                 src="/touzai-line.png"
                 alt="東西線"
-                className="absolute h-6 w-auto"
-                style={{ animation: `moveTrain ${calculateSpeed(touzaiDelay)}s linear infinite` }}
+                className="absolute h-6 w-auto z-10"
+                style={{ animation: `moveTrainWithStop ${calculateSpeed(touzaiDelay)}s ease-in-out infinite` }}
               />
             </div>
           </section>
@@ -203,12 +211,18 @@ function App() {
                 {fukutoshinDelay === 0 ? '平常運転' : `${fukutoshinDelay}分遅延`}
               </span>
             </div>
-            <div className="relative w-full h-10 bg-slate-900/50 rounded-lg overflow-hidden flex items-center">
+            {/* 高さを広げて駅の表示を追加 */}
+            <div className="relative w-full h-14 bg-slate-900/50 rounded-lg overflow-hidden flex items-center justify-center">
+              {/* 西早稲田駅マーカー */}
+              <div className="absolute flex flex-col items-center justify-center z-0 translate-y-3">
+                <div className="w-16 h-1 bg-slate-700 rounded mb-1"></div>
+                <span className="text-[10px] text-slate-400 font-bold tracking-widest">西早稲田駅</span>
+              </div>
               <img
                 src="/fukutoshin-line.png"
                 alt="副都心線"
-                className="absolute h-6 w-auto"
-                style={{ animation: `moveTrain ${calculateSpeed(fukutoshinDelay)}s linear infinite` }}
+                className="absolute h-6 w-auto z-10"
+                style={{ animation: `moveTrainWithStop ${calculateSpeed(fukutoshinDelay)}s ease-in-out infinite` }}
               />
             </div>
           </section>
@@ -228,7 +242,6 @@ function App() {
             />
           </div>
         </section>
-
 
       </div>
     </div>
