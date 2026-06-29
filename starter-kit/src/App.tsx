@@ -240,7 +240,7 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <section className="bg-white/70 backdrop-blur-md border-4 border-amber-50/80 rounded-[2rem] p-6 flex flex-col justify-center shadow-[0_8px_30px_rgb(180,140,110,0.1)] transition-transform hover:-translate-y-1">
             <h2 className="text-amber-700/80 font-bold text-sm mb-3 flex items-center gap-2">
-              <Fish size={18} className="text-sky-500" /> おさかなレート (為替)
+              <Fish size={18} className="text-sky-500" /> 為替レート
             </h2>
             <div className="flex items-baseline justify-between bg-sky-50/50 p-4 rounded-2xl">
               <span className="text-amber-800/70 text-sm font-bold">1ドル ＝</span>
