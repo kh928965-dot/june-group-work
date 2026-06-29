@@ -64,7 +64,7 @@ function App() {
     timeLabel = '夜';
   }
 
-  // トリビアAPI
+  // 猫トリビアAPI
   useEffect(() => {
     fetch('https://catfact.ninja/fact')
       .then((res) => res.json())
@@ -277,13 +277,16 @@ function App() {
                 <div className="w-2 h-2 bg-amber-300 rounded-full mb-1"></div>
                 <span className="text-[10px] text-amber-700/50 font-bold">早稲田駅</span>
               </div>
-
-              <div
-                className="absolute text-3xl drop-shadow-md z-10"
-                style={{ animation: `moveLeftWithStop ${calculateSpeed(touzaiDelay)}s linear infinite`, transform: 'translateX(-50%)' }}
-              >
-                🐈
-              </div>
+              
+              <img
+                src="/touzai-cat.png"
+                alt="cat" 
+                className="absolute z-10 w-12" 
+                style={{
+                  animation: `moveLeftWithStop ${calculateSpeed(touzaiDelay)}s linear infinite`,
+                  transform: "translateX(-50%)",
+                }}
+              />
             </div>
           </section>
 
@@ -304,12 +307,15 @@ function App() {
                 <span className="text-[10px] text-amber-700/50 font-bold">西早稲田駅</span>
               </div>
       
-              <div
-                className="absolute text-3xl drop-shadow-md z-10"
-                style={{ animation: `moveLeftWithStop ${calculateSpeed(fukutoshinDelay)}s linear infinite`, transform: 'translateX(-50%)' }}
-              >
-                🐈‍⬛
-              </div>
+              <img
+                src="/fukutoshin-cat.png"
+                alt="cat" 
+                className="absolute z-10 w-12" 
+                style={{
+                  animation: `moveLeftWithStop ${calculateSpeed(fukutoshinDelay)}s linear infinite`,
+                  transform: "translateX(-50%)",
+                }}
+              />
             </div>
           </section>
         </div>
