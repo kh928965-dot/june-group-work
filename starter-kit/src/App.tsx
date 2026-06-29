@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Cloud, CloudRain, Snowflake, Newspaper, Heart, Fish, Coffee, PawPrint, Music } from 'lucide-react';
 
 const WEATHER_API_KEY = '0d660bfdade34e35d97f2ef141ee6a7b';
+const ODPT_API_KEY = "nz3ah7qg6dgjl83tcyh1ljt184jvf9co1pgmkwgiu7256g6pa94b2ypiax1m46qm";
 
 type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'snowy' | 'unknown';
 
@@ -23,6 +24,13 @@ const weatherConfig = {
 
 const calculateSpeed = (delay: number) => 4 + delay * 0.8;
 
+const getDelayColor = (delay: number) => {
+  if (delay === 0) return "bg-emerald-50 text-emerald-600 border-emerald-200"; 
+  if (delay <= 5) return "bg-amber-50 text-amber-600 border-amber-200";       
+  if (delay <= 20) return "bg-orange-50 text-orange-600 border-orange-200";   
+  return "bg-rose-50 text-rose-600 border-rose-200 animate-pulse";          
+};
+
 type NewsArticle = {
   title: string;
   url: string;
@@ -38,8 +46,10 @@ function App() {
     type: WeatherType;
   } | null>(null);
   const [usdJpy, setUsdJpy] = useState<number | null>(null);
-  const [touzaiDelay] = useState(0);  
-  const [fukutoshinDelay] = useState(15); 
+  
+  const [touzaiDelay, settouzaiDelay] = useState(0);
+  const [fukutoshinDelay, setfukutoshinDelay] = useState(0);
+  
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [newsError, setNewsError] = useState('');
 
@@ -107,6 +117,31 @@ function App() {
       .then((res) => res.json())
       .then((data) => setUsdJpy(data.rates.JPY))
       .catch(() => console.error('為替の取得に失敗しました'));
+  }, []);
+
+  // 遅延API 
+  useEffect(() => {
+    const fetchTrainDelay = async () => {
+      try {
+        const res = await fetch(`https://api.odpt.org/api/v4/odpt:Train?odpt:operator=odpt.Operator:TokyoMetro&acl:consumerKey=${ODPT_API_KEY}`);
+        const trains = await res.json();
+
+        const touzaiTrains = trains.filter((t: any) => t['odpt:railway'] === 'odpt.Railway:TokyoMetro.Tozai');
+        const maxTouzaiDelaySec = Math.max(0, ...touzaiTrains.map((t: any) => t['odpt:delay'] || 0));
+        settouzaiDelay(Math.floor(maxTouzaiDelaySec / 60));
+
+        const fukutoshinTrains = trains.filter((t: any) => t['odpt:railway'] === 'odpt.Railway:TokyoMetro.Fukutoshin');
+        const maxFukutoshinDelaySec = Math.max(0, ...fukutoshinTrains.map((t: any) => t['odpt:delay'] || 0));
+        setfukutoshinDelay(Math.floor(maxFukutoshinDelaySec / 60));
+
+      } catch (error) {
+        console.error('電車の遅延情報の取得に失敗しました', error);
+      }
+    };
+
+    fetchTrainDelay(); 
+    const interval = setInterval(fetchTrainDelay, 60000); 
+    return () => clearInterval(interval);
   }, []);
 
   // NHKニュースRSS
@@ -283,7 +318,7 @@ function App() {
               <h2 className="text-amber-900 font-bold text-sm flex items-center gap-2">
                 <span className="bg-emerald-100 text-emerald-600 p-1.5 rounded-lg text-xs">東西線</span> 
               </h2>
-              <span className="text-xs font-bold bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full border border-emerald-200">
+              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(touzaiDelay)}`}>
                 {touzaiDelay === 0 ? '🐾 遅延状況 : スムーズにお散歩中 (正常運転)' : `🦋 遅延状況 : 寄り道中 (+${touzaiDelay}分遅延)`}
               </span>
             </div>
@@ -312,7 +347,7 @@ function App() {
               <h2 className="text-amber-900 font-bold text-sm flex items-center gap-2">
                 <span className="bg-amber-100 text-amber-700 p-1.5 rounded-lg text-xs">副都心線</span> 
               </h2>
-              <span className="text-xs font-bold bg-orange-50 text-orange-600 px-3 py-1 rounded-full border border-orange-200">
+              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(fukutoshinDelay)}`}>
                 {fukutoshinDelay === 0 ? '🐾 遅延状況 : スムーズにお散歩中(正常運転)' : `🦋 遅延状況 : 寄り道中 (+${fukutoshinDelay}分遅延)`}
               </span>
             </div>
