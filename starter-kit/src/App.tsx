@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Sun, Cloud, CloudRain, Snowflake, Newspaper, Heart, Fish, Coffee, PawPrint, Music } from 'lucide-react';
 
 const WEATHER_API_KEY = '0d660bfdade34e35d97f2ef141ee6a7b';
@@ -42,6 +42,16 @@ function App() {
   const [fukutoshinDelay] = useState(15); 
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [newsError, setNewsError] = useState('');
+
+  const paws = useMemo(() => {
+    return [...Array(55)].map(() => ({
+      size: Math.random() * 25 + 18,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 10}s`,
+      duration: `${8 + Math.random() * 6}s`,
+    }));
+  }, []);
 
   // 時計
   useEffect(() => {
@@ -132,21 +142,26 @@ function App() {
         .title-font {
           font-family: 'Mochiy Pop One', sans-serif;
         }
-        
+      
         @keyframes float {
-          0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-          10% { opacity: 0.1; }
-          90% { opacity: 0.1; }
-          100% { transform: translateY(-100vh) rotate(45deg); opacity: 0; }
+          0% {
+            transform: translate(0, 0) rotate(0deg);
+          }
+          50% {
+            transform: translate(20px, -30px) rotate(15deg);
+          }
+          100% {
+            transform: translate(0, 0) rotate(0deg);
+          }
         }
         
         .bg-paw {
           position: absolute;
-          color: #E2D4C8;
+          color: #B67A55;
+          opacity: 0.25;
           z-index: 0;
-          animation: float 20s infinite linear;
         }
-        
+
         @keyframes moveLeftWithStop {
           0% { left: 110%; }
           40% { left: 50%; }
@@ -155,16 +170,17 @@ function App() {
         }
       `}</style>
 
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {[...Array(6)].map((_, i) => (
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {paws.map((paw, i) => (
           <PawPrint 
             key={i} 
-            size={Math.random() * 40 + 20} 
+            size={paw.size} 
             className="bg-paw"
             style={{ 
-              left: `${Math.random() * 100}%`, 
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${15 + Math.random() * 10}s`
+              left: paw.left, 
+              top: paw.top,
+              animation: `float ${paw.duration} ease-in-out infinite`,
+              animationDelay: paw.delay
             }} 
           />
         ))}
