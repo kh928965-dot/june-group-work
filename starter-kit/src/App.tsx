@@ -146,7 +146,7 @@ function App() {
 
   // NHKニュースRSS
   useEffect(() => {
-    fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www3.nhk.or.jp/rss/news/cat0.xml')
+    fetch('https://api.rss2json.com/v1/api.json?rss_url=https://news.web.nhk/n-data/conf/na/rss/cat0.xml')
       .then((res) => res.json())
       .then((data) => {
         if (data.status === 'ok') {
