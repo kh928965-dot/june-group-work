@@ -22,12 +22,14 @@ const weatherConfig = {
   unknown: { icon: <Cloud size={64} className="text-stone-300 drop-shadow-sm" />, text: 'おそらのきげんを確認中...' },
 };
 
+// 修正前: calculateSpeed
 const calculateSpeed = (delay: number | string) => {
-  if (typeof delay === 'string') return 4;
-  return 4 + delay * 0.8;
+  if (typeof delay === 'string') return 15;
+  return Math.max(4, 15 - delay * 0.5);
 };
 
-const getDelayColor = (delay: number) => {
+const getDelayColor = (delay: number | string) => {
+  if (typeof delay === 'string') return "bg-rose-50 text-rose-600 border-rose-200"; // ★ここを赤系に！
   if (delay === 0) return "bg-emerald-50 text-emerald-600 border-emerald-200"; 
   if (delay <= 5) return "bg-amber-50 text-amber-600 border-amber-200";       
   if (delay <= 20) return "bg-orange-50 text-orange-600 border-orange-200";   
@@ -134,22 +136,22 @@ function App() {
         const trains = await trainRes.json();
         const info = await infoRes.json();
 
-        const updateLine = (railwayId: string, setDelay: (val: number | string) => void) => {
+            const updateLine = (railwayId: string, setDelay: (val: number | string) => void) => {
 
-          const lineTrains = trains.filter((t: any) => t['odpt:railway'] === railwayId);
-          const delays = lineTrains.map((t: any) => t['odpt:delay'] || 0);
-          const maxDelaySec = Math.max(0, ...delays);
-          const minutes = Math.floor(maxDelaySec / 60);
+              const infoData = info.find((t: any) => t['odpt:railway'] === railwayId);
+              const infoText = infoData?.['odpt:trainInformationText']?.ja || "";
 
-          const infoData = info.find((t: any) => t['odpt:railway'] === railwayId);
-          const text = infoData?.['odpt:trainInformationText']?.ja || "正常運転";
+              if (infoText && !infoText.includes("正常運転")) {
+                setDelay(infoText);
+              } else {
 
-          if (minutes >= 5) {
-            setDelay(minutes); //
-          } else {
-            setDelay(text);
-          }
-        };  
+                const lineTrains = trains.filter((t: any) => t['odpt:railway'] === railwayId);
+                const maxDelay = Math.max(0, ...lineTrains.map((t: any) => t['odpt:delay'] || 0));
+                const minutes = Math.floor(maxDelay / 60);
+
+                setDelay(minutes >= 5 ? minutes : "正常運転");
+              }
+            }; 
         updateLine(
           "odpt.Railway:TokyoMetro.Tozai",
           settouzaiDelay
@@ -340,7 +342,13 @@ function App() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* 東西線  */}
-          <section className="bg-white/70 backdrop-blur-md border-4 border-amber-50/80 rounded-[2rem] p-5 shadow-[0_8px_30px_rgb(180,140,110,0.1)] overflow-hidden relative">
+          <section
+            className={`backdrop-blur-md border-4 rounded-[2rem] p-5 shadow-[0_8px_30px_rgb(180,140,110,0.1)] overflow-hidden relative transition-colors ${
+              touzaiDelay === "正常運転"
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-red-300 bg-rose-50"
+            }`}
+          >
             <div className="flex items-center justify-between mb-4 relative z-10">
               <h2 className="text-amber-900 font-bold text-sm flex items-center gap-2">
                 <span className="bg-emerald-100 text-emerald-600 p-1.5 rounded-lg text-xs">東西線</span> 
@@ -370,31 +378,48 @@ function App() {
             </div>
           </section>
 
-          {/* 副都心線 */}
-          <section className="bg-white/70 backdrop-blur-md border-4 border-amber-50/80 rounded-[2rem] p-5 shadow-[0_8px_30px_rgb(180,140,110,0.1)] overflow-hidden relative">
+  {/* 副都心線 */}
+          <section
+            className={`backdrop-blur-md border-4 rounded-[2rem] p-5 shadow-[0_8px_30px_rgb(180,140,110,0.1)] overflow-hidden relative transition-colors ${
+              fukutoshinDelay === "正常運転"
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-red-300 bg-rose-50"
+            }`}
+          >
             <div className="flex items-center justify-between mb-4 relative z-10">
               <h2 className="text-amber-900 font-bold text-sm flex items-center gap-2">
-                <span className="bg-amber-100 text-amber-700 p-1.5 rounded-lg text-xs">副都心線</span> 
+                <span className="bg-amber-100 text-amber-700 p-1.5 rounded-lg text-xs">
+                  副都心線
+                </span>
               </h2>
-              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(typeof fukutoshinDelay === 'number' ? fukutoshinDelay : 0)}`}>
-                {typeof fukutoshinDelay === 'number' && fukutoshinDelay >= 5 
-                ? `🦋 遅延状況 : 寄り道中 (+${fukutoshinDelay}分遅延)` 
-                : `🐾 遅延状況 : ${fukutoshinDelay}`}
+
+              <span
+                className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(
+                  typeof fukutoshinDelay === "number" ? fukutoshinDelay : 0
+                )}`}
+              >
+                {typeof fukutoshinDelay === "number" && fukutoshinDelay >= 5
+                  ? `🦋 遅延状況 : 寄り道中 (+${fukutoshinDelay}分遅延)`
+                  : `🐾 遅延状況 : ${fukutoshinDelay}`}
               </span>
             </div>
-            
+
             <div className="relative w-full h-16 bg-[#FDFBF9] border-2 border-dashed border-amber-200 rounded-xl overflow-hidden flex items-end pb-2">
               <div className="absolute flex flex-col items-center justify-center z-0 left-1/2 -translate-x-1/2 bottom-2">
                 <div className="w-2 h-2 bg-amber-300 rounded-full mb-1"></div>
-                <span className="text-[10px] text-amber-700/50 font-bold">西早稲田駅</span>
+                <span className="text-[10px] text-amber-700/50 font-bold">
+                  西早稲田駅
+                </span>
               </div>
-      
+
               <img
                 src="/fukutoshin-cat.png"
-                alt="cat" 
-                className="absolute z-10 w-12" 
+                alt="cat"
+                className="absolute z-10 w-12"
                 style={{
-                  animation: `moveLeftWithStop ${calculateSpeed(fukutoshinDelay)}s linear infinite`,
+                  animation: `moveLeftWithStop ${calculateSpeed(
+                    fukutoshinDelay
+                  )}s linear infinite`,
                   transform: "translateX(-50%)",
                 }}
               />
