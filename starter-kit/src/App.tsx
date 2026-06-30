@@ -22,7 +22,10 @@ const weatherConfig = {
   unknown: { icon: <Cloud size={64} className="text-stone-300 drop-shadow-sm" />, text: 'おそらのきげんを確認中...' },
 };
 
-const calculateSpeed = (delay: number) => 4 + delay * 0.8;
+const calculateSpeed = (delay: number | string) => {
+  if (typeof delay === 'string') return 4;
+  return 4 + delay * 0.8;
+};
 
 const getDelayColor = (delay: number) => {
   if (delay === 0) return "bg-emerald-50 text-emerald-600 border-emerald-200"; 
@@ -47,8 +50,8 @@ function App() {
   } | null>(null);
   const [usdJpy, setUsdJpy] = useState<number | null>(null);
   
-  const [touzaiDelay, settouzaiDelay] = useState(0);
-  const [fukutoshinDelay, setfukutoshinDelay] = useState(0);
+  const [touzaiDelay, settouzaiDelay] = useState<number | string>(0);
+  const [fukutoshinDelay, setfukutoshinDelay] = useState<number | string>(0);
   
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [newsError, setNewsError] = useState('');
@@ -121,26 +124,41 @@ function App() {
 
   // 遅延API 
   useEffect(() => {
-    const fetchTrainDelay = async () => {
+    const fetchTrainStatus = async () => {
       try {
-        const res = await fetch(`https://api.odpt.org/api/v4/odpt:Train?odpt:operator=odpt.Operator:TokyoMetro&acl:consumerKey=${ODPT_API_KEY}`);
-        const trains = await res.json();
+        const [trainRes, infoRes] = await Promise.all([
+          fetch(`https://api.odpt.org/api/v4/odpt:Train?odpt:operator=odpt.Operator:TokyoMetro&acl:consumerKey=${ODPT_API_KEY}`),
+          fetch(`https://api.odpt.org/api/v4/odpt:TrainInformation?odpt:operator=odpt.Operator:TokyoMetro&acl:consumerKey=${ODPT_API_KEY}`)
+        ]);
+        
+        const trains = await trainRes.json();
+        const info = await infoRes.json();
 
-        const touzaiTrains = trains.filter((t: any) => t['odpt:railway'] === 'odpt.Railway:TokyoMetro.Tozai');
-        const maxTouzaiDelaySec = Math.max(0, ...touzaiTrains.map((t: any) => t['odpt:delay'] || 0));
-        settouzaiDelay(Math.floor(maxTouzaiDelaySec / 60));
+        const updateLine = (railwayId: string, setDelay: (val: number | string) => void) => {
 
-        const fukutoshinTrains = trains.filter((t: any) => t['odpt:railway'] === 'odpt.Railway:TokyoMetro.Fukutoshin');
-        const maxFukutoshinDelaySec = Math.max(0, ...fukutoshinTrains.map((t: any) => t['odpt:delay'] || 0));
-        setfukutoshinDelay(Math.floor(maxFukutoshinDelaySec / 60));
+          const lineTrains = trains.filter((t: any) => t['odpt:railway'] === railwayId);
+          const delays = lineTrains.map((t: any) => t['odpt:delay'] || 0);
+          const maxDelaySec = Math.max(0, ...delays);
+          const minutes = Math.floor(maxDelaySec / 60);
+
+          const infoData = info.find((t: any) => t['odpt:railway'] === railwayId);
+          const text = infoData?.['odpt:trainInformationText']?.ja || "正常運転";
+
+          if (minutes >= 5) {
+            setDelay(minutes); //
+          } else {
+            setDelay(text);
+          }
+        };
+
 
       } catch (error) {
-        console.error('電車の遅延情報の取得に失敗しました', error);
+        console.error('取得失敗', error);
       }
     };
 
-    fetchTrainDelay(); 
-    const interval = setInterval(fetchTrainDelay, 60000); 
+    fetchTrainStatus(); 
+    const interval = setInterval(fetchTrainStatus, 60000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -318,8 +336,10 @@ function App() {
               <h2 className="text-amber-900 font-bold text-sm flex items-center gap-2">
                 <span className="bg-emerald-100 text-emerald-600 p-1.5 rounded-lg text-xs">東西線</span> 
               </h2>
-              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(touzaiDelay)}`}>
-                {touzaiDelay === 0 ? '🐾 遅延状況 : スムーズにお散歩中 (正常運転)' : `🦋 遅延状況 : 寄り道中 (+${touzaiDelay}分遅延)`}
+              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(typeof touzaiDelay === 'number' ? touzaiDelay : 0)}`}>
+                {typeof touzaiDelay === 'number' && touzaiDelay >= 5 
+                ? `🦋 遅延状況 : 寄り道中 (+${touzaiDelay}分遅延)` 
+                : `🐾 遅延状況 : ${touzaiDelay}`}
               </span>
             </div>
             
@@ -347,8 +367,10 @@ function App() {
               <h2 className="text-amber-900 font-bold text-sm flex items-center gap-2">
                 <span className="bg-amber-100 text-amber-700 p-1.5 rounded-lg text-xs">副都心線</span> 
               </h2>
-              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(fukutoshinDelay)}`}>
-                {fukutoshinDelay === 0 ? '🐾 遅延状況 : スムーズにお散歩中(正常運転)' : `🦋 遅延状況 : 寄り道中 (+${fukutoshinDelay}分遅延)`}
+              <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(typeof fukutoshinDelay === 'number' ? fukutoshinDelay : 0)}`}>
+                {typeof fukutoshinDelay === 'number' && fukutoshinDelay >= 5 
+                ? `🦋 遅延状況 : 寄り道中 (+${fukutoshinDelay}分遅延)` 
+                : `🐾 遅延状況 : ${fukutoshinDelay}`}
               </span>
             </div>
             
