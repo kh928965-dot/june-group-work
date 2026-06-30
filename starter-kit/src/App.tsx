@@ -144,9 +144,9 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // NHKニュースRSS
+// NHKニュースRSS
   useEffect(() => {
-    fetch('https://api.rss2json.com/v1/api.json?rss_url=https://news.web.nhk/n-data/conf/na/rss/cat0.xml')
+    fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www3.nhk.or.jp/rss/news/cat0.xml')
       .then((res) => res.json())
       .then((data) => {
         if (data.status === 'ok') {
@@ -159,7 +159,10 @@ function App() {
           setNewsError('ニュースの取得に失敗しました');
         }
       })
-      .catch(() => setNewsError('ニュースの取得に失敗しました'));
+      .catch((error) => {
+        console.error('RSS Fetch Error:', error);
+        setNewsError('ニュースの取得に失敗しました');
+      });
   }, []);
 
   const weatherType = weatherData?.type ?? 'unknown';
@@ -350,14 +353,12 @@ function App() {
               <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getDelayColor(fukutoshinDelay)}`}>
                 {fukutoshinDelay === 0 ? '🐾 遅延状況 : スムーズにお散歩中(正常運転)' : `🦋 遅延状況 : 寄り道中 (+${fukutoshinDelay}分遅延)`}
               </span>
-            </div>
-            
+            </div>         
             <div className="relative w-full h-16 bg-[#FDFBF9] border-2 border-dashed border-amber-200 rounded-xl overflow-hidden flex items-end pb-2">
               <div className="absolute flex flex-col items-center justify-center z-0 left-1/2 -translate-x-1/2 bottom-2">
                 <div className="w-2 h-2 bg-amber-300 rounded-full mb-1"></div>
                 <span className="text-[10px] text-amber-700/50 font-bold">西早稲田駅</span>
-              </div>
-      
+              </div>     
               <img
                 src="/fukutoshin-cat.png"
                 alt="cat" 
