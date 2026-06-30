@@ -149,7 +149,16 @@ function App() {
           } else {
             setDelay(text);
           }
-        };
+        };  
+        updateLine(
+          "odpt.Railway:TokyoMetro.Tozai",
+          settouzaiDelay
+        );
+
+        updateLine(
+          "odpt.Railway:TokyoMetro.Fukutoshin",
+          setfukutoshinDelay
+        );
 
 
       } catch (error) {
