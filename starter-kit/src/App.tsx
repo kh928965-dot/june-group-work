@@ -96,7 +96,7 @@ function App() {
     if (type === 'rainy' || type === 'snowy') {
       return { img: "/cat_noon_rainy.png", text: "雨だからお家でゲーム🎮", sub: "全クリ目指すニャ！" };
     } else {
-      return { img: "/cat_noon_sunny.png", text: "よっしゃ、スマッシュ！🎾", sub: "運動の秋ニャ🔥" };
+      return { img: "/cat_noon_sunny.png", text: "よっしゃ、スマッシュ！🎾", sub: "こんな日は外で運動ニャ🔥" };
     }
   }, [time, weatherData?.type]);
 
