@@ -373,20 +373,18 @@ function App() {
         </div>
 
         {/* BGM */}
-        <section className="bg-white/70 backdrop-blur-md border-4 border-amber-50/80 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(180,140,110,0.1)]">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="bg-stone-100 p-2 rounded-full text-stone-600">
-              <Coffee size={20} />
-            </div>
-            <h2 className="text-amber-900 font-bold">
-              ねこカフェ気分のBGM <span className="text-amber-700/60 text-sm ml-2">({timeLabel}用プレイリスト)</span>
-            </h2>
+        <section className="max-w-xl w-full mx-auto bg-white/70 backdrop-blur-md border-4 border-amber-50/80 rounded-[2rem] p-6 flex flex-col justify-center shadow-[0_8px_30px_rgb(180,140,110,0.1)] transition-transform hover:-translate-y-1">
+          <h2 className="text-amber-700/80 font-bold text-sm mb-3 flex items-center gap-2">
+            <Coffee size={18} className="text-stone-500" /> 
+            ねこカフェ気分のBGM 
+            <span className="text-amber-700/60 text-xs font-normal">（{timeLabel}用プレイリスト）</span>
             <Music size={16} className="text-amber-700/50 ml-auto animate-bounce" />
-          </div>
+          </h2>
+          
+          {/* 動画埋め込み部分 */}
           <div className="rounded-2xl overflow-hidden shadow-inner border-2 border-stone-100">
             <iframe
-              width="100%"
-              height="140"
+              className="w-full aspect-video"
               src={`https://www.youtube.com/embed/${bgmId}?autoplay=0&rel=0`}
               title={`${timeLabel}のBGM`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -394,7 +392,6 @@ function App() {
             />
           </div>
         </section>
-
       </div>
     </div>
   );
