@@ -360,7 +360,7 @@ function App() {
             </h2>
             <div className="bg-rose-50/50 p-4 rounded-2xl h-full flex items-center">
               <p className="text-amber-900 text-sm leading-relaxed font-medium">
-                「{trivia}」
+                {trivia}
               </p>
             </div>
           </section>
