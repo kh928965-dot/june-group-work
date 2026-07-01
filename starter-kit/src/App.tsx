@@ -84,6 +84,22 @@ function App() {
     timeLabel = '夜';
   }
 
+  const catStatus = useMemo(() => {
+    const h = time.getHours();
+    const type = weatherData?.type ?? 'unknown';
+    if (h >= 20 || h < 5) {
+      return { img: "/cat_night.png", text: "すやすや...💤", sub: "あしたもがんばるニャ" };
+    }
+    if (h >= 5 && h < 11) {
+      return { img: "/cat_morning.png", text: "ガラガラペー！", sub: "朝の身支度ニャ✨" };
+    }  
+    if (type === 'rainy' || type === 'snowy') {
+      return { img: "/cat_noon_rainy.png", text: "雨だからお家でゲーム🎮", sub: "全クリ目指すニャ！" };
+    } else {
+      return { img: "/cat_noon_sunny.png", text: "よっしゃ、スマッシュ！🎾", sub: "運動の秋ニャ🔥" };
+    }
+  }, [time, weatherData?.type]);
+
   // 猫トリビアAPI
   useEffect(() => {
     fetch('https://catfact.ninja/fact')
@@ -229,8 +245,9 @@ function App() {
         <header className="flex justify-center mt-2 mb-2">
           <h1 className="title-font text-2xl md:text-3xl text-amber-800 drop-shadow-sm flex items-center gap-3">
             <PawPrint className="text-orange-400 -rotate-12" size={28} />
-            Cat Dashboard🐈
-            <PawPrint className="text-orange-400 rotate-12" size={28} />
+            Cat Dashboard
+            <img src="/cat.png" alt="Cat Icon" className="w-8 h-8" />
+            <PawPrint className="text-orange-400 -rotate-12" size={28} />
           </h1>
         </header>
 
@@ -250,6 +267,22 @@ function App() {
               {time.toLocaleTimeString('ja-JP', { second: '2-digit' })} 秒経過ニャ
             </p>
           </div>
+
+          <div className="flex-1 w-full md:w-auto px-0 md:px-8 my-4 md:my-0 flex justify-center">
+             <div className="bg-orange-50/50 border-2 border-orange-100 rounded-2xl py-3 px-6 flex items-center justify-center gap-4 w-full max-w-sm hover:scale-105 transition-transform cursor-default shadow-sm">
+               
+               <img 
+                 src={catStatus.img} 
+                 alt="猫の様子" 
+                 className="h-16 w-16 object-contain hover:animate-pulse" 
+               />             
+               <div className="text-left">
+                 <p className="text-amber-900 font-bold text-sm md:text-base">{catStatus.text}</p>
+                 <p className="text-amber-700/80 text-xs mt-1 font-medium">{catStatus.sub}</p>
+               </div>
+             </div>
+          </div>
+
           <div className="flex flex-col items-center bg-amber-50/50 p-6 rounded-[2rem] min-w-[140px]">
             {w.icon}
             <div className="flex items-center gap-2 mt-3 title-font">
@@ -292,14 +325,33 @@ function App() {
 
         {/* 為替＋トリビア */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <section className="bg-white/70 backdrop-blur-md border-4 border-amber-50/80 rounded-[2rem] p-6 flex flex-col justify-center shadow-[0_8px_30px_rgb(180,140,110,0.1)] transition-transform hover:-translate-y-1">
-            <h2 className="text-amber-700/80 font-bold text-sm mb-3 flex items-center gap-2">
-              <Fish size={18} className="text-sky-500" /> 為替レート
-            </h2>
-            <div className="flex items-baseline justify-between bg-sky-50/50 p-4 rounded-2xl">
-              <span className="text-amber-800/70 text-sm font-bold">1ドル ＝</span>
-              <span className="text-3xl font-bold text-sky-700 title-font">{usdJpy ? `${usdJpy}円` : '--'}</span>
+          <section className="bg-white/70 backdrop-blur-md border-4 border-amber-50/80 rounded-[2rem] p-6 flex flex-col justify-between shadow-[0_8px_30px_rgb(180,140,110,0.1)] transition-transform hover:-translate-y-1">
+            <div>
+              <h2 className="text-amber-700/80 font-bold text-sm mb-3 flex items-center gap-2">
+                <Fish size={18} className="text-sky-500" /> 為替レート
+              </h2>
+              <div className="flex items-baseline justify-between bg-sky-50/50 p-4 rounded-2xl">
+                <span className="text-amber-800/70 text-sm font-bold">1ドル ＝</span>
+                <span className="text-3xl font-bold text-sky-700 title-font">{usdJpy ? `${usdJpy}円` : '--'}</span>
+              </div>
             </div>
+            {usdJpy && (
+              <div className="mt-4 bg-amber-50/50 p-4 rounded-2xl flex items-start gap-3"> 
+                <img 
+                  src={usdJpy> 150 ? "/cat_sad.png" : "/cat_happy.png"} 
+                  alt={usdJpy>150 ? "悲しい猫" : "嬉しい猫"} 
+                  className="w-12 h-12 object-contain mt-1 animate-bounce" 
+                />     
+                <div>
+                  <p className="text-amber-900 font-bold text-sm mb-1">
+                    {usdJpy >150 ? "円安ニャ...輸入品の高級カリカリが遠のくニャ🙀": "おっ！海外のちゅーるを爆買いするチャンスニャ😼"}
+                  </p>
+                  <p className="text-amber-700/70 text-xs leading-relaxed mt-2">
+                    💡 ちなみに1ドルで、ちゅーる（約50円）が約<span className="font-bold text-orange-500 text-sm mx-1">{Math.floor(usdJpy / 50)}</span>本買える計算ニャ。
+                  </p>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="bg-white/70 backdrop-blur-md border-4 border-amber-50/80 rounded-[2rem] p-6 flex flex-col justify-center shadow-[0_8px_30px_rgb(180,140,110,0.1)] transition-transform hover:-translate-y-1">
